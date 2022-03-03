@@ -28,6 +28,13 @@ impl<T> Myvec<T> {
             self.capacity = 4;
             self.len = 1
         } else if self.len < self.capacity {
+            let offset = self
+                .len
+                .checked_mul(mem::size_of::<T>())
+                .expect("Cannot reach memoryt location");
+            //Offset cannot wrap around and pointer is pointing to valid memory
+            //And writing to an offset at self.len is valid
+            assert!(offset < isize::MAX as usize, "Wrapped isize");
             unsafe { self.ptr.as_ptr().add(self.len).write(item) }
             self.len += 1;
         } else {

@@ -31,15 +31,30 @@ impl<T> Myvec<T> {
             let offset = self
                 .len
                 .checked_mul(mem::size_of::<T>())
-                .expect("Cannot reach memoryt location");
+                .expect("Cannot reach memory location");
             //Offset cannot wrap around and pointer is pointing to valid memory
             //And writing to an offset at self.len is valid
             assert!(offset < isize::MAX as usize, "Wrapped isize");
             unsafe { self.ptr.as_ptr().add(self.len).write(item) }
             self.len += 1;
         } else {
-            todo!()
+            debug_assert!(self.len == self.capacity);
+            let new_capacity = self.capacity.checked_mul(2).expect("capacity wrapped");
+            let align = mem::align_of::<T>();
+            let size = mem::size_of::<T>() * self.capacity;
+            size.checked_add(size % align).expect("can not allocate ");
+            unsafe {
+                let layout = alloc::Layout::from_size_align_unchecked(size, align);
+                let new_size = mem::size_of::<T>() * new_capacity;
+                let ptr = alloc::realloc(self.ptr.as_ptr() as *mut u8, layout, new_size);
+                let ptr = NonNull::new(ptr as *mut T).expect("can not reallocate ");
+                ptr.as_ptr().add(self.len).write(item);
+                self.ptr = ptr;
+                self.len += 1;
+                self.capacity = new_capacity;
+            }
         }
+        todo!()
     }
     pub fn capacity(&self) -> usize {
         self.capacity

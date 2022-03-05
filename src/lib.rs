@@ -43,18 +43,18 @@ impl<T> Myvec<T> {
             let align = mem::align_of::<T>();
             let size = mem::size_of::<T>() * self.capacity;
             size.checked_add(size % align).expect("can not allocate ");
-            unsafe {
+            let ptr = unsafe {
                 let layout = alloc::Layout::from_size_align_unchecked(size, align);
                 let new_size = mem::size_of::<T>() * new_capacity;
                 let ptr = alloc::realloc(self.ptr.as_ptr() as *mut u8, layout, new_size);
                 let ptr = NonNull::new(ptr as *mut T).expect("can not reallocate ");
                 ptr.as_ptr().add(self.len).write(item);
-                self.ptr = ptr;
-                self.len += 1;
-                self.capacity = new_capacity;
-            }
+                ptr
+            };
+            self.ptr = ptr;
+            self.len += 1;
+            self.capacity = new_capacity;
         }
-        todo!()
     }
     pub fn capacity(&self) -> usize {
         self.capacity
@@ -70,12 +70,12 @@ mod tests {
     #[test]
     fn it_works() {
         let mut vec: Myvec<usize> = Myvec::new();
-        // vec.push(1usize);
-        // vec.push(2);
-        // vec.push(3);
-        // vec.push(4);
-        // vec.push(5);
-        assert_eq!(vec.capacity(), 0);
-        assert_eq!(vec.len(), 0);
+        vec.push(1usize);
+        vec.push(2);
+        vec.push(3);
+        vec.push(4);
+        vec.push(5);
+        assert_eq!(vec.capacity(), 8);
+        assert_eq!(vec.len(), 5);
     }
 }

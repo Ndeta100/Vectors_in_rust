@@ -1,4 +1,4 @@
-use myvec::MyVec;
+use rust_vectors::Myvec;
 fn main() {
     let mut vec: Myvec<usize> = Myvec::new();
     vec.push(1usize);

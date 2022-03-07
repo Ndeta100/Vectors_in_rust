@@ -1,6 +1,6 @@
 ##Implementing a custom VEC libarary in rust from scratch
 
-`run cargo new filename --lib
+`run cargo new filename --lib`
 
 to great a library executable
 

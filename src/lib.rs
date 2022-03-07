@@ -1,6 +1,8 @@
 use std::alloc;
 use std::mem;
+use std::ptr;
 use std::ptr::NonNull;
+
 pub struct Myvec<T> {
     ptr: NonNull<T>,
     len: usize,
@@ -56,12 +58,31 @@ impl<T> Myvec<T> {
             self.capacity = new_capacity;
         }
     }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        if index >= self.len {
+            return None;
+        }
+        Some(unsafe { &*self.ptr.as_ptr().add(index) })
+    }
     pub fn capacity(&self) -> usize {
         self.capacity
     }
 
     pub fn len(&self) -> usize {
         self.len
+    }
+}
+impl<T> Drop for Myvec<T> {
+    fn drop(&mut self) {
+        unsafe {
+            ptr::drop_in_place(std::slice::from_raw_parts_mut(self.ptr.as_ptr(), self.len));
+            let layout = alloc::Layout::from_size_align_unchecked(
+                mem::size_of::<T>() * self.capacity,
+                mem::align_of::<T>(),
+            );
+            alloc::dealloc(self.ptr.as_ptr() as *mut u8, layout)
+        }
     }
 }
 #[cfg(test)]
